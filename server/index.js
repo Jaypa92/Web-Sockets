@@ -34,6 +34,11 @@ io.on('connection', (socket) => {
     console.log('A user connected');
 
     socket.on('join room', (room) => {
+        if(!room || typeof room !== 'string'){
+            socket.emit('error', 'Invalid room name');
+            return;
+        }
+
         if(!rooms[room]) {
             rooms[room] = [];
         }
@@ -43,6 +48,10 @@ io.on('connection', (socket) => {
     })
 
     socket.on('chat message', ({room, msg}) => {
+        if(!room || !msg || typeof msg !== 'string'){
+            socket.emit('error', 'Invalid message or room');
+            return;
+        }
         io.to(room).emit('chat message', msg);
     });
 
