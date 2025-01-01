@@ -42,9 +42,19 @@ io.on('connection', (socket) => {
         if(!rooms[room]) {
             rooms[room] = [];
         }
+
+        if(rooms[room].includes(socket.id)){
+            socket.emit('error',`You are already in room: ${room}`);
+            return;
+        }
+
         rooms[room].push(socket.id);
         socket.join(room);
         console.log(`User joined room: ${room}`);
+
+        socket.emit('room joined', `You have joined room: ${room}`);
+
+        socket.to(room).emit('chat message', `A new user has joined the room: ${socket.id}`);
     })
 
     socket.on('chat message', ({room, msg}) => {
@@ -60,6 +70,11 @@ io.on('connection', (socket) => {
 
         for(let room in rooms){
             rooms[room] = rooms[room].filter(id => id !== socket.id);
+            if(rooms[room].length === 0){
+                delete rooms[room];
+            }else{
+                socket.to(room).emit('chat message',`User ${socket.id} has left the room`)
+            }
         }
     });
 });
